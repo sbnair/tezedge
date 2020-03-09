@@ -28,3 +28,13 @@ pub(crate) fn make_json_response<T: serde::Serialize>(content: &T) -> ServiceRes
         .header(hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
         .body(Body::from(serde_json::to_string(content)?))?)
 }
+
+/// Function to generate a response, returning a single number
+// Note: Ocaml returns a number with content-type: application/json set (e.g. votes/current_quorum)
+pub(crate) fn make_simple_number_respone(num: i32) -> ServiceResult {
+    Ok(Response::builder()
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        // TODO: add to config
+        .header(hyper::header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+        .body(Body::from(format!("{}\n", num.to_string())))?)
+}

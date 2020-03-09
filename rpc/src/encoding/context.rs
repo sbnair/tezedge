@@ -39,7 +39,9 @@ pub struct ContextConstants {
     cost_per_byte: String,
     hard_storage_limit_per_operation: String,
     test_chain_duration: String,
+    #[get = "pub(crate)"]
     quorum_min: i64,
+    #[get = "pub(crate)"]
     quorum_max: i64,
     min_proposal_quorum: i64,
     initial_endorsers: i64,

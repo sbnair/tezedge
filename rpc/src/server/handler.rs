@@ -12,6 +12,7 @@ use crate::{
     encoding::{base_types::*, monitor::BootstrapInfo}, make_json_response,
     ServiceResult,
     ts_to_rfc3339,
+    make_simple_number_respone,
 };
 use crate::helpers::RpcResponseData;
 use crate::rpc_actor::RpcCollectedStateRef;
@@ -192,6 +193,13 @@ pub async fn endorsing_rights(_: Request<Body>, params: Params, query: Query, en
     }
 }
 
+pub async fn votes_current_quorum(_: Request<Body>, params: Params, _: Query, env: RpcServiceEnvironment) -> ServiceResult {
+    let chain_id = params.get_str("chain_id").unwrap();
+    let block_id = params.get_str("block_id").unwrap();
+
+    result_to_simple_response(service::get_votes_current_quorum(chain_id, block_id, env.persistent_storage(), env.persistent_storage().context_storage(), env.state()), env.log())
+}
+
 pub async fn dev_blocks(_: Request<Body>, _: Params, query: Query, env: RpcServiceEnvironment) -> ServiceResult {
     let from_block_id = unwrap_block_hash(query.get_str("from_block_id"), env.state(), env.genesis_hash());
     let limit = query.get_usize("limit").unwrap_or(50);
@@ -226,6 +234,20 @@ pub async fn dev_stats_memory(_: Request<Body>, _: Params, _: Query, env: RpcSer
         Ok(resp) => make_json_response(&resp),
         Err(e) => {
             warn!(env.log(), "GetStatsMemory: {}", e);
+            empty()
+        }
+    }
+}
+
+/// Returns result as a simple number response.
+fn result_to_simple_response(res: Result<i32, failure::Error>, log: &Logger) -> ServiceResult {
+    match res {
+        Ok(num) => {
+            warn!(log, "{}", format!("{}", num));
+            make_simple_number_respone(num)
+        }
+        Err(err) => {
+            warn!(log, "Failed to execute RPC function"; "reason" => format!("{:?}", err));
             empty()
         }
     }

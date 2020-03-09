@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use shell::shell_channel::BlockApplied;
 use shell::stats::memory::{Memory, MemoryData, MemoryStatsResult};
-use storage::{BlockHeaderWithHash, BlockStorage, BlockStorageReader, ContextRecordValue, ContextStorage};
+use storage::{BlockHeaderWithHash, BlockStorage, BlockStorageReader, ContextRecordValue, ContextStorage, num_from_slice};
 use storage::block_storage::BlockJsonData;
 use storage::persistent::PersistentStorage;
 use storage::skip_list::Bucket;
@@ -679,6 +679,44 @@ pub(crate) fn get_context(level: &str, list: ContextList) -> Result<Option<HashM
         let storage = list.read().expect("poisoned storage lock");
         storage.get(level).map_err(|e| e.into())
     }
+}
+
+pub(crate) fn get_votes_current_quorum(_chain_id: &str, block_id: &str, persistent_storage: &PersistentStorage, context_list: ContextList, state: &RpcCollectedStateRef) -> Result<i32, failure::Error> {
+    // get level by block_id
+    let block_level: usize;
+    if let Some(l) = get_level_by_block_id(block_id, persistent_storage, state)? {
+        block_level = l
+    } else {
+        bail!("Level not found for block_id {}", block_id)
+    }
+    
+    // get the protocol constants
+    let constants = match get_context_constants(_chain_id, block_id, Some(block_level.try_into()?), context_list.clone(), persistent_storage, state)? {
+        Some(v) => v,
+        None => bail!("Cannot get protocol constants")
+    };
+    
+    // get quorum_min and quorum_max from the constants
+    let quorum_min = *constants.quorum_min();
+    let quorum_max = *constants.quorum_max();
+
+    // calculate the quorum_diff -> (quorum_max - quorum_min)
+    let quorum_diff = quorum_max - quorum_min;
+
+    // get participation_ema from the context DB
+    let participation_ema;
+    {
+        let reader = context_list.read().unwrap();
+        if let Some(Bucket::Exists(data)) = reader.get_key(block_level, &"data/votes/participation_ema".to_string())? {
+            participation_ema = num_from_slice!(data, 0, i32);
+        } else {
+            bail!("Cannot get participation_ema from context");
+        }
+    }
+    // calcualte and return the current quorum -> quorum_min + ((participation_ema * quorum_diff) / 100_00)
+    let current_quorum = quorum_min + ((participation_ema as i64 * quorum_diff) / 100_00);
+    
+    Ok(current_quorum.try_into()?)
 }
 
 /// Get all context constants which are used in endorsing and baking rights generation
