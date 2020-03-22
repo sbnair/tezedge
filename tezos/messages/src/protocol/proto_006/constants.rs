@@ -58,7 +58,7 @@ pub struct ParametricConstants {
     block_security_deposit: BigInt,
     endorsement_security_deposit: BigInt,
     baking_reward_per_endorsement: Vec<BigInt>,
-    endorsement_reward: BigInt,
+    endorsement_reward: Vec<BigInt>,
     cost_per_byte: BigInt,
     hard_storage_limit_per_operation: BigInt,
     test_chain_duration: i64,
@@ -92,7 +92,7 @@ impl HasEncoding for ParametricConstants {
             Field::new("block_security_deposit", Encoding::Mutez),
             Field::new("endorsement_security_deposit", Encoding::Mutez),
             Field::new("baking_reward_per_endorsement", Encoding::dynamic(Encoding::list(Encoding::Mutez))),
-            Field::new("endorsement_reward", Encoding::Mutez),
+            Field::new("endorsement_reward", Encoding::dynamic(Encoding::list(Encoding::Mutez))),
             Field::new("cost_per_byte", Encoding::Mutez),
             Field::new("hard_storage_limit_per_operation", Encoding::Z),
             Field::new("test_chain_duration", Encoding::Int64),
@@ -125,7 +125,7 @@ impl ParametricConstants {
         ret.insert("block_security_deposit", UniversalValue::big_num(self.block_security_deposit));
         ret.insert("endorsement_security_deposit", UniversalValue::big_num(self.endorsement_security_deposit));
         ret.insert("baking_reward_per_endorsement", UniversalValue::big_num_list(self.baking_reward_per_endorsement));
-        ret.insert("endorsement_reward", UniversalValue::big_num(self.endorsement_reward));
+        ret.insert("endorsement_reward", UniversalValue::big_num_list(self.endorsement_reward));
         ret.insert("cost_per_byte", UniversalValue::big_num(self.cost_per_byte));
         ret.insert("hard_storage_limit_per_operation", UniversalValue::big_num(self.hard_storage_limit_per_operation));
         ret.insert("test_chain_duration", UniversalValue::num(self.test_chain_duration));
