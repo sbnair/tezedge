@@ -75,11 +75,11 @@ impl ParametricConstants {
         ret.insert("blocks_per_commitment", UniversalValue::num(self.blocks_per_commitment));
         ret.insert("blocks_per_roll_snapshot", UniversalValue::num(self.blocks_per_roll_snapshot));
         ret.insert("blocks_per_voting_period", UniversalValue::num(self.blocks_per_voting_period));
-        ret.insert("time_between_blocks", UniversalValue::num_list(self.time_between_blocks.iter()));
+        ret.insert("time_between_blocks", UniversalValue::i64_list(self.time_between_blocks));
         ret.insert("endorsers_per_block", UniversalValue::num(self.endorsers_per_block));
         ret.insert("hard_gas_limit_per_operation", UniversalValue::big_num(self.hard_gas_limit_per_operation));
         ret.insert("hard_gas_limit_per_block", UniversalValue::big_num(self.hard_gas_limit_per_block));
-        ret.insert("proof_of_work_threshold", UniversalValue::num(self.proof_of_work_threshold));
+        ret.insert("proof_of_work_threshold", UniversalValue::i64(self.proof_of_work_threshold));
         ret.insert("tokens_per_roll", UniversalValue::big_num(self.tokens_per_roll));
         ret.insert("michelson_maximum_type_size", UniversalValue::num(self.michelson_maximum_type_size));
         ret.insert("seed_nonce_revelation_tip", UniversalValue::big_num(self.seed_nonce_revelation_tip));
@@ -90,7 +90,7 @@ impl ParametricConstants {
         ret.insert("endorsement_reward", UniversalValue::big_num(self.endorsement_reward));
         ret.insert("cost_per_byte", UniversalValue::big_num(self.cost_per_byte));
         ret.insert("hard_storage_limit_per_operation", UniversalValue::big_num(self.hard_storage_limit_per_operation));
-        ret.insert("test_chain_duration", UniversalValue::num(self.test_chain_duration));
+        ret.insert("test_chain_duration", UniversalValue::i64(self.test_chain_duration));
         ret
     }
 }

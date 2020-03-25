@@ -8,7 +8,7 @@ use hyper::{Body, Request};
 use path_tree::PathTree;
 
 use crate::server::{Handler, HResult, Params, Query, RpcServiceEnvironment};
-use crate::server::handler;
+use crate::server::{dev_handler, handler};
 
 pub(crate) fn create_routes() -> PathTree<Handler> {
 
@@ -31,11 +31,11 @@ pub(crate) fn create_routes() -> PathTree<Handler> {
     routes.handle("/chains/:chain_id/blocks/:block_id/votes/listings", handler::votes_listings);
 
     // Tezedge dev and support rpc
-    routes.handle("/dev/chains/main/blocks", handler::dev_blocks);
-    routes.handle("/dev/chains/main/blocks/:block_id/actions", handler::dev_block_actions);
-    routes.handle("/dev/chains/main/actions/contracts/:contract_id", handler::dev_contract_actions);
-    routes.handle("/dev/context/:id", handler::dev_context);
-    routes.handle("/stats/memory", handler::dev_stats_memory);
+    routes.handle("/dev/chains/main/blocks", dev_handler::dev_blocks);
+    routes.handle("/dev/chains/main/blocks/:block_id/actions", dev_handler::dev_block_actions);
+    routes.handle("/dev/chains/main/actions/contracts/:contract_id", dev_handler::dev_contract_actions);
+    routes.handle("/dev/context/:id", dev_handler::dev_context);
+    routes.handle("/stats/memory", dev_handler::dev_stats_memory);
 
     routes
 }

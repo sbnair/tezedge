@@ -236,4 +236,15 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_decode_protocol_hash() -> Result<(), failure::Error> {
+        let decoded = HashType::ProtocolHash.string_to_bytes("PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb")?;
+        let decoded = hex::encode(&decoded);
+        let expected = "3e5e3a606afab74a59ca09e333633e2770b6492c5e594455b71e9a2f0ea92afb";
+        assert_eq!(expected, decoded);
+
+        assert_eq!("PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb", HashType::ProtocolHash.bytes_to_string(&hex::decode(decoded)?));
+        Ok(())
+    }
 }

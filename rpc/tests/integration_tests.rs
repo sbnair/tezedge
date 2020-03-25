@@ -58,7 +58,7 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
         if level >= BLOCKS_PER_SNAPSHOT && level % BLOCKS_PER_SNAPSHOT == 0 {
             // --------------------- Tests for each snapshot of the cycle ---------------------
             println!("run snapshot tests: {}, level: {:?}", cycle, level);
-        
+
             test_rpc_compare_json(&format!("{}/{}/{}?level={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", std::cmp::max(0, level-1) )).await;
             test_rpc_compare_json(&format!("{}/{}/{}?level={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", std::cmp::max(0, level-10) )).await;
             test_rpc_compare_json(&format!("{}/{}/{}?level={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", std::cmp::max(0, level-1000) )).await;
