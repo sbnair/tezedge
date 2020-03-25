@@ -43,6 +43,14 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
         // -------------------------- Integration tests for RPC --------------------------
         // ---------------------- Please keep one function per test ----------------------
 
+        // --------------------------- Tests for each block_id ---------------------------
+        test_rpc_compare_json(&format!("{}/{}", "chains/main/blocks", &prev_block)).await;
+        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "context/constants")).await;
+        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights")).await;
+        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "helpers/baking_rights")).await;
+        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "votes/listings")).await;
+        // --------------------------------- End of tests --------------------------------
+
         let level: i64 = block_json["metadata"]["level"]["level"].as_i64().unwrap();
         let cycle: i64 = block_json["metadata"]["level"]["cycle"].as_i64().unwrap();
 
@@ -87,8 +95,6 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
             test_rpc_compare_json(&format!("{}/{}/{}?all&cycle={}", "chains/main/blocks", &prev_block, "helpers/baking_rights", std::cmp::max(0, cycle-2) )).await;
             //test_rpc_compare_json(&format!("{}/{}/{}?cycle={}&delegate={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", cycle, "tz1YH2LE6p7Sj16vF6irfHX92QV45XAZYHnX")).await;
 
-            test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "context/constants")).await;
-
             // known ocaml node bugs
             // - endorsing rights: for cycle 0, when requested cycle 4 there should be cycle check error:
             //  [{"kind":"permanent","id":"proto.005-PsBabyM1.seed.unknown_seed","oldest":0,"requested":4,"latest":3}]
@@ -108,15 +114,6 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
             }
             cycle_loop_counter += 1;
         }
-
-        // --------------------------- Tests for each block_id ---------------------------
-
-        // test_rpc_compare_json(&format!("{}/{}", "chains/main/blocks", &prev_block)).await;
-        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights")).await;
-        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "helpers/baking_rights")).await;
-        test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "votes/listings")).await;
-
-        // --------------------------------- End of tests --------------------------------
 
         prev_block = predecessor;
     }    
