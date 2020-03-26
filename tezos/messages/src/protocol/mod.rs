@@ -1,7 +1,9 @@
-use std::collections::HashMap;
-
 // Copyright (c) SimpleStaking and Tezedge Contributors
 // SPDX-License-Identifier: MIT
+
+use std::collections::HashMap;
+
+use chrono::prelude::*;
 use failure::Error;
 use serde::{ser, Serialize};
 use serde::ser::SerializeSeq;
@@ -26,11 +28,21 @@ pub enum UniversalValue {
     NumberI64(i64),
     BigNumber(BigInt),
     List(Vec<Box<UniversalValue>>),
+    String(String),
+    TimestampRfc3339(i64),
 }
 
 impl UniversalValue {
     fn num<T: Into<i32>>(val: T) -> Self {
         Self::Number(val.into())
+    }
+
+    fn string(val: String) -> Self {
+        Self::String(val)
+    }
+
+    fn timestamp_rfc3339(val: i64) -> Self {
+        Self::TimestampRfc3339(val)
     }
 
     fn i64(val: i64) -> Self {
@@ -45,6 +57,14 @@ impl UniversalValue {
         let mut ret: Vec<Box<UniversalValue>> = Default::default();
         for x in val {
             ret.push(Box::new(Self::i64(x)))
+        }
+        Self::List(ret)
+    }
+
+    fn num_list<'a, T: 'a + Into<i32> + Clone, I: IntoIterator<Item=&'a T>>(val: I) -> Self {
+        let mut ret: Vec<Box<UniversalValue>> = Default::default();
+        for x in val {
+            ret.push(Box::new(Self::num(x.clone())))
         }
         Self::List(ret)
     }
@@ -73,6 +93,15 @@ impl Serialize for UniversalValue {
             UniversalValue::NumberI64(num) => {
                 serializer.serialize_str(num.to_string().as_str())
             }
+            UniversalValue::String(val) => {
+                serializer.serialize_str(val.as_str())
+            }
+            UniversalValue::TimestampRfc3339(val) => {
+                let timestamp = Utc
+                    .from_utc_datetime(&NaiveDateTime::from_timestamp(val.clone(), 0))
+                    .to_rfc3339_opts(SecondsFormat::Secs, true);
+                serializer.serialize_str(timestamp.as_str())
+            }
             UniversalValue::List(values) => {
                 let mut seq = serializer.serialize_seq(Some(values.len()))?;
                 for value in values {
@@ -82,6 +111,12 @@ impl Serialize for UniversalValue {
             }
         }
     }
+}
+
+/// A trait for converting a protocol data for RPC json purposes.
+pub trait ToRpcJsonMap {
+    /// Converts a value of `self` to a HashMap, which can be serialized as json for rpc
+    fn as_map(&self) -> HashMap<&'static str, UniversalValue>;
 }
 
 pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Option<HashMap<&'static str, UniversalValue>>, Error> {
@@ -129,6 +164,6 @@ pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Opt
             param.extend(FIXED.clone().as_map());
             Ok(Some(param))
         }
-        _ => Ok(None)
+        _ => panic!("Missing constants encoding for protocol: {}, protocol is not yet supported!", hash)
     }
 }

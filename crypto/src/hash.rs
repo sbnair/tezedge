@@ -24,7 +24,9 @@ pub type OperationHash = Hash;
 pub type OperationListListHash = Hash;
 pub type ContextHash = Hash;
 pub type ProtocolHash = Hash;
-pub type ContractHash = Hash;
+pub type ContractTz1Hash = Hash;
+pub type ContractTz2Hash = Hash;
+pub type ContractTz3Hash = Hash;
 pub type CryptoboxPublicKeyHash = Hash;
 
 #[derive(Debug, Copy, Clone)]
