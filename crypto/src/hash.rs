@@ -10,7 +10,7 @@ mod prefix_bytes {
     pub const OPERATION_HASH: [u8; 2] = [5, 116];
     pub const OPERATION_LIST_LIST_HASH: [u8; 3] = [29, 159, 109];
     pub const PROTOCOL_HASH: [u8; 2] = [2, 170];
-    pub const PUBLIC_KEY_HASH: [u8; 2] = [153, 103];
+    pub const CRYPTOBOX_PUBLIC_KEY_HASH: [u8; 2] = [153, 103];
     pub const CONTRACT_KT1_HASH: [u8; 3] = [2, 90, 121];
     pub const CONTRACT_TZ1_HASH: [u8; 3] = [6, 161, 159];
     pub const CONTRACT_TZ2_HASH: [u8; 3] = [6, 161, 161];
@@ -25,6 +25,7 @@ pub type OperationListListHash = Hash;
 pub type ContextHash = Hash;
 pub type ProtocolHash = Hash;
 pub type ContractHash = Hash;
+pub type CryptoboxPublicKeyHash = Hash;
 
 #[derive(Debug, Copy, Clone)]
 pub enum HashType {
@@ -40,7 +41,7 @@ pub enum HashType {
     // "\005\116" (* o(51) *)
     OperationListListHash,
     // "\029\159\109" (* LLo(53) *)
-    PublicKeyHash,
+    CryptoboxPublicKeyHash,
     // "\153\103" (* id(30) *)
     ContractKt1Hash,
     // "\002\090\121" (* KT1(36) *)
@@ -48,7 +49,8 @@ pub enum HashType {
     // "\006\161\159" (* tz1(36) *)
     ContractTz2Hash,
     // "\006\161\161" (* tz2(36) *)
-    ContractTz3Hash,        // "\006\161\164" (* tz3(36) *)
+    ContractTz3Hash,
+    // "\006\161\164" (* tz3(36) *)
 }
 
 impl HashType {
@@ -63,7 +65,7 @@ impl HashType {
             HashType::ProtocolHash => &PROTOCOL_HASH,
             HashType::OperationHash => &OPERATION_HASH,
             HashType::OperationListListHash => &OPERATION_LIST_LIST_HASH,
-            HashType::PublicKeyHash => &PUBLIC_KEY_HASH,
+            HashType::CryptoboxPublicKeyHash => &CRYPTOBOX_PUBLIC_KEY_HASH,
             HashType::ContractKt1Hash => &CONTRACT_KT1_HASH,
             HashType::ContractTz1Hash => &CONTRACT_TZ1_HASH,
             HashType::ContractTz2Hash => &CONTRACT_TZ2_HASH,
@@ -80,7 +82,7 @@ impl HashType {
             | HashType::ProtocolHash
             | HashType::OperationHash
             | HashType::OperationListListHash => 32,
-            HashType::PublicKeyHash => 16,
+            HashType::CryptoboxPublicKeyHash => 16,
             HashType::ContractKt1Hash
             | HashType::ContractTz1Hash
             | HashType::ContractTz2Hash
@@ -100,7 +102,7 @@ impl HashType {
             | HashType::ContractTz1Hash
             | HashType::ContractTz2Hash
             | HashType::ContractTz3Hash => &copy_bytes,
-            HashType::PublicKeyHash => &crate::blake2b::digest_128
+            HashType::CryptoboxPublicKeyHash => &crate::blake2b::digest_128
         }
     }
 
@@ -174,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_encode_public_key_hash() -> Result<(), failure::Error> {
-        let decoded = HashType::PublicKeyHash.bytes_to_string(&hex::decode("2cc1b580f4b8b1f6dbd0aa1d9cde2655c2081c07d7e61249aad8b11d954fb01a")?);
+        let decoded = HashType::CryptoboxPublicKeyHash.bytes_to_string(&hex::decode("2cc1b580f4b8b1f6dbd0aa1d9cde2655c2081c07d7e61249aad8b11d954fb01a")?);
         let expected = "idsg2wkkDDv2cbEMK4zH49fjgyn7XT";
         assert_eq!(expected, decoded);
 
