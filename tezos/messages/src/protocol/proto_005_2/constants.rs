@@ -1,13 +1,18 @@
 // Copyright (c) SimpleStaking and Tezedge Contributors
 // SPDX-License-Identifier: MIT
-use serde::{Deserialize, Serialize};
-use tezos_encoding::{
-    types::BigInt,
-    encoding::{Encoding, Field, HasEncoding},
-};
-use crate::p2p::binary_message::cache::{BinaryDataCache, CachedData, CacheReader, CacheWriter};
+
 use std::collections::HashMap;
-use crate::protocol::{UniversalValue, ToRpcJsonMap};
+
+use getset::{CopyGetters, Getters};
+use serde::{Deserialize, Serialize};
+
+use tezos_encoding::{
+    encoding::{Encoding, Field, HasEncoding},
+    types::BigInt,
+};
+
+use crate::p2p::binary_message::cache::{BinaryDataCache, CachedData, CacheReader, CacheWriter};
+use crate::protocol::{ToRpcJsonMap, UniversalValue};
 
 pub const FIXED: FixedConstants = FixedConstants {
     proof_of_work_nonce_size: 8,
@@ -17,9 +22,10 @@ pub const FIXED: FixedConstants = FixedConstants {
     max_proposals_per_delegate: 20,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Getters, CopyGetters)]
 pub struct FixedConstants {
     proof_of_work_nonce_size: u8,
+    #[get_copy = "pub"]
     nonce_length: u8,
     max_revelations_per_block: u8,
     max_operation_data_length: i32,
@@ -39,14 +45,19 @@ impl ToRpcJsonMap for FixedConstants {
 }
 
 // -----------------------------------------------------------------------------------------------
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Getters, CopyGetters)]
 pub struct ParametricConstants {
+    #[get_copy = "pub"]
     preserved_cycles: u8,
+    #[get_copy = "pub"]
     blocks_per_cycle: i32,
     blocks_per_commitment: i32,
+    #[get_copy = "pub"]
     blocks_per_roll_snapshot: i32,
     blocks_per_voting_period: i32,
+    #[get = "pub"]
     time_between_blocks: Vec<i64>,
+    #[get_copy = "pub"]
     endorsers_per_block: u16,
     hard_gas_limit_per_operation: BigInt,
     hard_gas_limit_per_block: BigInt,

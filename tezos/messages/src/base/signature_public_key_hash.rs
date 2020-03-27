@@ -41,7 +41,7 @@ impl From<FromBase58CheckError> for ConversionError {
 }
 
 /// This is a wrapper for Signature.PublicKeyHash, which tezos uses with different curves: tz1(ed25519), tz2 (secp256k1), tz3(p256).
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum SignaturePublicKeyHash {
     Ed25519(ContractTz1Hash),
     Secp256k1(ContractTz2Hash),
@@ -143,6 +143,8 @@ mod tests {
     #[test]
     fn test_ed25519_from_bytes() -> Result<(), failure::Error> {
         let valid_pk = vec![0, 3, 65, 14, 206, 174, 244, 127, 36, 48, 150, 156, 243, 27, 213, 139, 41, 30, 231, 173, 127, 97, 192, 177, 142, 31, 107, 197, 219, 246, 111, 155, 121];
+        let short_pk = vec![0, 3, 65, 14, 206, 174, 244, 127, 36, 48, 150, 156, 243, 27, 213, 139, 41, 30, 231, 173, 127, 97, 192, 177, 142, 31, 107, 197, 219];
+        let wrong_tag_pk = vec![4, 3, 65, 14, 206, 174, 244, 127, 36, 48, 150, 156, 243, 27, 213, 139, 41, 30, 231, 173, 127, 97, 192, 177, 142, 31, 107, 197, 219, 246, 111, 155, 121];
 
         let decoded = SignaturePublicKeyHash::from_tagged_bytes(valid_pk.clone())?;
         let decoded = match decoded {
@@ -152,7 +154,15 @@ mod tests {
         assert!(decoded.is_some());
 
         let decoded = decoded.map(|h| HashType::ContractTz1Hash.bytes_to_string(&h)).unwrap();
-        Ok(assert_eq!("tz1PirboZKFVqkfE45hVLpkpXaZtLk3mqC17", decoded))
+        assert_eq!("tz1PirboZKFVqkfE45hVLpkpXaZtLk3mqC17", decoded);
+
+        let result = SignaturePublicKeyHash::from_tagged_bytes(short_pk);
+        assert_eq!(result, Err(ConversionError::InvalidPublicKey));
+
+        let result = SignaturePublicKeyHash::from_tagged_bytes(wrong_tag_pk);
+        assert_eq!(result, Err(ConversionError::InvalidPublicKey));
+
+        Ok(())
     }
 
     #[test]

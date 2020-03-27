@@ -3,7 +3,6 @@
 
 use std::collections::HashMap;
 
-use chrono::prelude::*;
 use failure::Error;
 use serde::{ser, Serialize};
 use serde::ser::SerializeSeq;
@@ -12,6 +11,7 @@ use crypto::hash::{HashType, ProtocolHash};
 use tezos_encoding::types::BigInt;
 
 use crate::p2p::binary_message::BinaryMessage;
+use crate::ts_to_rfc3339;
 
 pub mod proto_001;
 pub mod proto_002;
@@ -97,9 +97,7 @@ impl Serialize for UniversalValue {
                 serializer.serialize_str(val.as_str())
             }
             UniversalValue::TimestampRfc3339(val) => {
-                let timestamp = Utc
-                    .from_utc_datetime(&NaiveDateTime::from_timestamp(val.clone(), 0))
-                    .to_rfc3339_opts(SecondsFormat::Secs, true);
+                let timestamp = ts_to_rfc3339(val.clone());
                 serializer.serialize_str(timestamp.as_str())
             }
             UniversalValue::List(values) => {
@@ -113,13 +111,15 @@ impl Serialize for UniversalValue {
     }
 }
 
+pub type RpcJsonMap = HashMap<&'static str, UniversalValue>;
+
 /// A trait for converting a protocol data for RPC json purposes.
 pub trait ToRpcJsonMap {
     /// Converts a value of `self` to a HashMap, which can be serialized as json for rpc
-    fn as_map(&self) -> HashMap<&'static str, UniversalValue>;
+    fn as_map(&self) -> RpcJsonMap;
 }
 
-pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Option<HashMap<&'static str, UniversalValue>>, Error> {
+pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Option<RpcJsonMap>, Error> {
     let hash: &str = &HashType::ProtocolHash.bytes_to_string(&protocol);
     match hash {
         proto_001::PROTOCOL_HASH => {
