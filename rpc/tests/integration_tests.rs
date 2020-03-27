@@ -21,10 +21,6 @@ async fn test_rpc_compare() {
 
 async fn integration_tests_rpc(from_block: &str, to_block: &str) {
     let mut prev_block = to_block.to_string();
-    // TODO: take const from constants? from which block?
-    const BLOCKS_PER_SNAPSHOT: i64 = 256;
-    const BLOCKS_PER_CYCLE: i64 = 2048;
-    const PERSERVED_CYCLES: i64 = 3;
     let mut cycle_loop_counter: i64 = 0;
     const MAX_CYCLE_LOOPS: i64 = 4;
 
@@ -51,11 +47,19 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
         test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", &prev_block, "votes/listings")).await;
         // --------------------------------- End of tests --------------------------------
 
+        // we need some constants for
+        let constants_json = get_rpc_as_json(NodeType::Tezedge, &format!("{}/{}/{}", "chains/main/blocks", &prev_block, "context/constants")).await
+            .expect("Failed to get constants from tezedge");
+
+        let preserved_cycles = constants_json["preserved_cycles"].as_i64().expect(&format!("No constant 'preserved_cycles' for block_id: {}", &prev_block));
+        let blocks_per_cycle = constants_json["blocks_per_cycle"].as_i64().expect(&format!("No constant 'blocks_per_cycle' for block_id: {}", &prev_block));
+        let blocks_per_roll_snapshot = constants_json["blocks_per_roll_snapshot"].as_i64().expect(&format!("No constant 'blocks_per_roll_snapshot' for block_id: {}", &prev_block));
+
         let level: i64 = block_json["metadata"]["level"]["level"].as_i64().unwrap();
         let cycle: i64 = block_json["metadata"]["level"]["cycle"].as_i64().unwrap();
 
         // test last level of snapshot
-        if level >= BLOCKS_PER_SNAPSHOT && level % BLOCKS_PER_SNAPSHOT == 0 {
+        if level >= blocks_per_roll_snapshot && level % blocks_per_roll_snapshot == 0 {
             // --------------------- Tests for each snapshot of the cycle ---------------------
             println!("run snapshot tests: {}, level: {:?}", cycle, level);
 
@@ -81,17 +85,17 @@ async fn integration_tests_rpc(from_block: &str, to_block: &str) {
         }
 
         // test first and last level of cycle
-        if level == 1 || (level >= BLOCKS_PER_CYCLE && ( (level-1) % BLOCKS_PER_CYCLE == 0 || level % BLOCKS_PER_CYCLE == 0)) {
+        if level == 1 || (level >= blocks_per_cycle && ( (level-1) % blocks_per_cycle == 0 || level % blocks_per_cycle == 0)) {
 
             // ----------------------- Tests for each cycle of the cycle -----------------------
             println!("run cycle tests: {}, level: {:?}", cycle, level);
 
             test_rpc_compare_json(&format!("{}/{}/{}?cycle={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", cycle)).await;
-            test_rpc_compare_json(&format!("{}/{}/{}?cycle={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", cycle+PERSERVED_CYCLES)).await;
+            test_rpc_compare_json(&format!("{}/{}/{}?cycle={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", cycle+preserved_cycles)).await;
             test_rpc_compare_json(&format!("{}/{}/{}?cycle={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", std::cmp::max(0, cycle-2) )).await;
 
             test_rpc_compare_json(&format!("{}/{}/{}?all&cycle={}", "chains/main/blocks", &prev_block, "helpers/baking_rights", cycle)).await;
-            test_rpc_compare_json(&format!("{}/{}/{}?all&cycle={}", "chains/main/blocks", &prev_block, "helpers/baking_rights", cycle+PERSERVED_CYCLES)).await;
+            test_rpc_compare_json(&format!("{}/{}/{}?all&cycle={}", "chains/main/blocks", &prev_block, "helpers/baking_rights", cycle+preserved_cycles)).await;
             test_rpc_compare_json(&format!("{}/{}/{}?all&cycle={}", "chains/main/blocks", &prev_block, "helpers/baking_rights", std::cmp::max(0, cycle-2) )).await;
             //test_rpc_compare_json(&format!("{}/{}/{}?cycle={}&delegate={}", "chains/main/blocks", &prev_block, "helpers/endorsing_rights", cycle, "tz1YH2LE6p7Sj16vF6irfHX92QV45XAZYHnX")).await;
 
