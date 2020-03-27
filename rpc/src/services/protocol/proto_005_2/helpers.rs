@@ -439,7 +439,7 @@ impl RightsParams {
     #[inline]
     fn get_valid_level(level: i64) -> i64 {
         // for all reuqested negative levels use level 1
-        if level < 1 {
+        if level < 0 {
             1
         } else {
             level
