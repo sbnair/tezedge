@@ -222,8 +222,6 @@ steps:
   volumes:
     - name: tezedge-node-data
       path: /tmp/tezedge_developer
-  environment:
-    
   commands: 
     - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge.config" --network "carthagenet" --identity-file "/drone/src/docker/identities/identity_tezedge.json" --protocol-runner "./target/release/protocol-runner" --p2p-port 39733 --websocket-address 0.0.0.0:34927 --rpc-port 18732 --tezos-data-dir=/tmp/tezedge_developer/tezos-node --bootstrap-db-path=/tmp/tezedge_developer/light-node
 
