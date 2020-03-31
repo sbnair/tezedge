@@ -16,23 +16,13 @@ pub enum NodeType {
 #[ignore]
 #[tokio::test]
 async fn test_rpc_compare() {
-    integration_tests_rpc(&from_block_header(), &to_block_header()).await
+    integration_tests_rpc(from_block_header(), to_block_header()).await
 }
 
-async fn integration_tests_rpc(from_block: &str, to_block: &str) {
+async fn integration_tests_rpc(from_block: i64, to_block: i64) {
     let mut cycle_loop_counter: i64 = 0;
     const MAX_CYCLE_LOOPS: i64 = 4;
     // const MINIMAL_BOOTSTRAP_LEVEL: i64 = 500;
-
-    let to_block: i64 = match to_block.parse() {
-        Ok(val) => val,
-        Err(_) => panic!("TO_BLOCK environment variable should be a positive number")
-    };
-
-    let from_block: i64 = match from_block.parse() {
-        Ok(val) => val,
-        Err(_) => panic!("FROM_BLOCK environment variable should be a positive number")
-    };
 
     // if to_block >= MINIMAL_BOOTSTRAP_LEVEL {
     //     // allways test a block from the first cycle as they are special cases
@@ -181,14 +171,18 @@ fn node_rpc_url(node: NodeType, rpc_path: &str) -> String {
     }
 }
 
-fn from_block_header() -> String {
+fn from_block_header() -> i64 {
     env::var("FROM_BLOCK_HEADER")
         .unwrap_or_else(|_| panic!("FROM_BLOCK_HEADER env variable is missing, check rpc/README.md"))
+        .parse()
+        .unwrap_or_else(|_| panic!("FROM_BLOCK_HEADER env variable can not be parsed as a number, check rpc/README.md"))
 }
 
-fn to_block_header() -> String {
+fn to_block_header() -> i64 {
     env::var("TO_BLOCK_HEADER")
         .unwrap_or_else(|_| panic!("TO_BLOCK_HEADER env variable is missing, check rpc/README.md"))
+        .parse()
+        .unwrap_or_else(|_| panic!("TO_BLOCK_HEADER env variable can not be parsed as a number, check rpc/README.md"))
 }
 
 fn ocaml_node_rpc_context_root() -> String {
