@@ -42,8 +42,7 @@ async fn integration_tests_rpc(from_block: i64, to_block: i64) {
     // }
 
     for level in from_block..to_block + 1 {
-        let block_json = get_rpc_as_json(NodeType::Ocaml, &format!("{}/{}", "chains/main/blocks", level)).await
-            .expect("Failed to get block from ocaml");
+        let block_json = get_rpc_as_json(NodeType::Ocaml, &format!("{}/{}", "chains/main/blocks", level)).await.unwrap();
         
         // -------------------------- Integration tests for RPC --------------------------
         // ---------------------- Please keep one function per test ----------------------
