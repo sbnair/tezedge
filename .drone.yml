@@ -185,15 +185,20 @@ environment:
 
 steps:
 # uncomment this step when a modification to the storage was done and requires a fresh bootstrap
-# - name: cleanup-tezedge-data
-#   image: alpine/git
-#   user: root
-#   volumes:
-#     - name: tezedge-node-data
-#       path: /tmp/tezedge_developer
-#   commands:
-#     - rm -rf /tmp/tezedge_developer/light-node
-#     - rm -rf /tmp/tezedge_developer/tezos-node
+- name: cleanup-node-data
+  image: alpine/git
+  user: root
+  volumes:
+    - name: tezedge-node-data
+      path: /tmp/tezedge_developer
+    - name: ocaml-node-data
+      path: /home/tezos/data
+  commands:
+    # tezedge data
+    - rm -rf /tmp/tezedge_developer/light-node
+    - rm -rf /tmp/tezedge_developer/tezos-node
+    # ocaml data
+    - rm -rf /home/tezos/data
 
 - name: build-tezedge
   image: simplestakingcom/tezedge-ci-builder:latest
