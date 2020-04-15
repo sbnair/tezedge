@@ -76,6 +76,14 @@ impl UniversalValue {
         }
         Self::List(ret)
     }
+
+    fn string_list<'a, I: IntoIterator<Item=String>>(val: I) -> Self {
+        let mut ret: Vec<Box<UniversalValue>> = Default::default();
+        for x in val {
+            ret.push(Box::new(Self::string(x.clone())))
+        }
+        Self::List(ret)
+    }
 }
 
 impl Serialize for UniversalValue {

@@ -8,11 +8,13 @@ use failure::bail;
 use serde::Serialize;
 use serde_json::Value;
 
+use crypto::blake2b;
 use crypto::hash::{BlockHash, HashType, ProtocolHash};
 use shell::shell_channel::BlockApplied;
 use storage::{BlockMetaStorage, BlockStorage, BlockStorageReader};
 use storage::persistent::PersistentStorage;
 use storage::skip_list::Bucket;
+use storage::context_action_storage::contract_id_to_contract_address_for_index;
 use tezos_messages::p2p::encoding::prelude::*;
 use tezos_messages::ts_to_rfc3339;
 
@@ -357,4 +359,24 @@ pub(crate) fn get_context(level: &str, list: ContextList) -> Result<Option<HashM
         let storage = list.read().expect("poisoned storage lock");
         storage.get(level).map_err(|e| e.into())
     }
+}
+
+#[inline]
+pub fn create_indexed_key_for_protocol_hash(prefix: &str, protocol_hash: &str) -> Result<Vec<String>, failure::Error> {
+    const INDEX_SIZE: usize = 6;
+    let mut key_vector = Vec::new();
+
+    // let address = contract_id_to_contract_address_for_index(contract_id)?;
+    let protocol_hash_bytes = HashType::ProtocolHash.string_to_bytes(protocol_hash)?;
+
+    let hashed = hex::encode(blake2b::digest_256(&protocol_hash_bytes));
+
+    key_vector.push(prefix.to_string());
+    for elem in (0..INDEX_SIZE * 2).step_by(2) {
+        key_vector.push(hashed[elem..elem + 2].to_string());
+    }
+
+    key_vector.push(hex::encode(protocol_hash_bytes));
+
+    Ok(key_vector)
 }
