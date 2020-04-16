@@ -11,6 +11,7 @@ use crypto::hash::{HashType, ProtocolHash};
 use tezos_encoding::types::BigInt;
 
 use crate::p2p::binary_message::BinaryMessage;
+use crate::base::signature_public_key_hash::SignaturePublicKeyHash;
 use crate::ts_to_rfc3339;
 
 pub mod proto_001;
@@ -173,5 +174,49 @@ pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Opt
             Ok(Some(param))
         }
         _ => panic!("Missing constants encoding for protocol: {}, protocol is not yet supported!", hash)
+    }
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub enum Ballot {
+    Yay,
+    Nay,
+    Pass,
+}
+
+impl Ballot {
+    fn to_string(&self) -> String {
+        match self {
+            Ballot::Yay => "yay".to_string(),
+            Ballot::Nay => "nay".to_string(),
+            Ballot::Pass => "pass".to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Debug, Clone, Ord, Eq, PartialEq, PartialOrd)]
+pub struct BallotListElement {
+    pkh: SignaturePublicKeyHash,
+    ballot: Ballot,
+}
+
+impl BallotListElement {
+    pub fn new(
+        pkh: SignaturePublicKeyHash,
+        ballot: Ballot,
+    ) -> Self {
+        Self {
+            pkh,
+            ballot,
+        }
+    }
+}
+
+impl ToRpcJsonMap for BallotListElement {
+    fn as_map(&self) -> HashMap<&'static str, UniversalValue> {
+        let mut ret: HashMap<&'static str, UniversalValue> = Default::default();
+        ret.insert("pkh", UniversalValue::string(self.pkh.to_string()));
+        ret.insert("ballot", UniversalValue::string(self.ballot.to_string()));
+        ret
     }
 }

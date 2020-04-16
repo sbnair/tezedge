@@ -34,7 +34,11 @@ use tezos_messages::protocol::{
     proto_006 as proto_006_constants,
     RpcJsonMap,
     UniversalValue,
+    Ballot,
+    BallotListElement,
+    ToRpcJsonMap,
 };
+
 
 use crate::helpers::{get_context, get_context_protocol_params, get_level_by_block_id};
 use crate::rpc_actor::RpcCollectedStateRef;
@@ -274,13 +278,13 @@ pub(crate) fn get_votes_current_proposal(_chain_id: &str, block_id: &str, persis
         HashType::ProtocolHash.bytes_to_string(&data)
     } else {
         // set current_proposal to an empty string if there is no current_proposal
-        "".to_string()
+        return Ok(None)
     };
     
     Ok(Some(UniversalValue::String(current_proposal)))
 }
 
-pub(crate) fn get_votes_proposals(chain_id: &str, block_id: &str, persistent_storage: &PersistentStorage, context_list: ContextList, state: &RpcCollectedStateRef) -> Result<Option<Vec<Vec<UniversalValue>>>, failure::Error> {
+pub(crate) fn get_votes_proposals(_chain_id: &str, block_id: &str, persistent_storage: &PersistentStorage, context_list: ContextList, state: &RpcCollectedStateRef) -> Result<Option<Vec<Vec<UniversalValue>>>, failure::Error> {
     // get level by block_id
     let level: usize = if let Some(l) = get_level_by_block_id(block_id, persistent_storage, state)? {
         l
@@ -293,8 +297,6 @@ pub(crate) fn get_votes_proposals(chain_id: &str, block_id: &str, persistent_sto
 
     let proposals_key = vec!["data/votes/proposals/".to_string()];
     let listings_key = vec!["data/votes/listings/".to_string()];
-
-    let proposals: Vec<UniversalValue>;
 
     let proposals_data = if let Some(data) = context.get_by_key_prefix(&context_index, &proposals_key)? {
         data
@@ -348,4 +350,52 @@ pub(crate) fn get_votes_proposals(chain_id: &str, block_id: &str, persistent_sto
         
     
     Ok(Some(ret))
+}
+
+pub(crate) fn get_votes_ballot_list(_chain_id: &str, block_id: &str, persistent_storage: &PersistentStorage, context_list: ContextList, state: &RpcCollectedStateRef) -> Result<Option<Vec<RpcJsonMap>>, failure::Error> {
+    let level: usize = if let Some(l) = get_level_by_block_id(block_id, persistent_storage, state)? {
+        l
+    } else {
+        bail!("Level not found for block_id {}", block_id)
+    };
+
+    let context = TezedgeContext::new(BlockStorage::new(&persistent_storage), context_list);
+    let context_index = ContextIndex::new(Some(level), None);
+
+    let ballot_key_prefix = vec!["data/votes/ballots/".to_string()];
+
+    let ballot_data = if let Some(data) = context.get_by_key_prefix(&context_index, &ballot_key_prefix)? {
+        data
+    } else {
+        bail!("No proposals found");
+    };
+
+    let mut ballot_list: Vec<RpcJsonMap> = Default::default();
+    let mut temp_list: Vec<BallotListElement> = Default::default();
+
+    for (key, value) in ballot_data.into_iter() {
+        if let Bucket::Exists(data) = value {
+            if data.len() == 1 {
+                // get the address an the curve tag from the key (e.g. data/votes/listings/ed25519/2c/ca/28/ab/01/9ae2d8c26f4ce4924cad67a2dc6618)
+                let address = key.split("/").skip(4).take(6).join("");
+                let curve = key.split("/").skip(3).take(1).join("");
+                println!("Add: {} Curve: {}", address, curve);
+                let address_decoded = SignaturePublicKeyHash::from_hex_hash_and_curve(&address, &curve)?;
+                let ballot = match data[0] {
+                    0 => Ballot::Yay,
+                    1 => Ballot::Nay,
+                    2 => Ballot::Pass,
+                    _ => bail!("Wrong ballot")
+                };
+                temp_list.push(BallotListElement::new(address_decoded, ballot));
+            } else {
+                bail!("No ballot cast");
+            }
+        } else {
+            bail!("No ballot cast");
+        }
+    }
+    temp_list.sort();
+    ballot_list.reverse();
+    Ok(Some(ballot_list))
 }
