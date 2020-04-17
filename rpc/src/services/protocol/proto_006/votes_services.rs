@@ -16,7 +16,7 @@ use crate::helpers::ContextProtocolParam;
 
 pub(crate) fn get_current_quorum(context_proto_params: ContextProtocolParam, _chain_id: &str, context: TezedgeContext) -> Result<Option<UniversalValue>, failure::Error> {
     
-    // get quorum_min and quorum_max from the constants
+    // get quorum_min and quorum_max from the constants(protocol dependant)
     let dynamic = tezos_messages::protocol::proto_006::constants::ParametricConstants::from_bytes(context_proto_params.constants_data)?;
     let quorum_min = dynamic.quorum_min();
     let quorum_max = dynamic.quorum_max();
