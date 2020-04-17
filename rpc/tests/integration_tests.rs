@@ -49,12 +49,14 @@ async fn integration_tests_rpc(from_block: i64, to_block: i64) {
         // ---------------------- Please keep one function per test ----------------------
 
         // --------------------------- Tests for each block_id ---------------------------
-        test_rpc_compare_json(&format!("{}/{}", "chains/main/blocks", level)).await;
+        // test_rpc_compare_json(&format!("{}/{}", "chains/main/blocks", level)).await;
         //test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "header")).await;
         // test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "context/constants")).await;
         // test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "helpers/endorsing_rights")).await;
         // test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "helpers/baking_rights")).await;
         // test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "votes/listings")).await;
+
+        // voting rpcs
         test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "votes/listings")).await;
         test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "votes/proposals")).await;
         test_rpc_compare_json(&format!("{}/{}/{}", "chains/main/blocks", level, "votes/current_proposal")).await;

@@ -40,10 +40,11 @@ use tezos_messages::protocol::{
 };
 
 
-use crate::helpers::{get_context, get_context_protocol_params, get_level_by_block_id};
+use crate::helpers::{get_context, get_context_protocol_params, get_level_by_block_id, extract_curve_and_bytes};
 use crate::rpc_actor::RpcCollectedStateRef;
 
 mod proto_005_2;
+mod proto_006;
 
 /// Return generated baking rights.
 ///
@@ -189,8 +190,14 @@ pub(crate) fn get_votes_listings(_chain_id: &str, block_id: &str, persistent_sto
     for (key, value) in listings_data.into_iter() {
         if let Bucket::Exists(data) = value {
             // get the address an the curve tag from the key (e.g. data/votes/listings/ed25519/2c/ca/28/ab/01/9ae2d8c26f4ce4924cad67a2dc6618)
-            let address = key.split("/").skip(4).take(6).join("");
-            let curve = key.split("/").skip(3).take(1).join("");
+            // let address = key.split("/").skip(4).take(6).join("");
+            // let curve = key.split("/").skip(3).take(1).join("");
+
+            let (curve, address) = if let Some(t) = extract_curve_and_bytes(&key)? {
+                t
+            } else {
+                bail!("Cannot extract curve and address from key");
+            };
 
             let address_decoded = SignaturePublicKeyHash::from_hex_hash_and_curve(&address, &curve)?.to_string();
             listings.push(VoteListings::new(address_decoded, num_from_slice!(data, 0, i32)));
@@ -256,7 +263,9 @@ pub(crate) fn get_votes_current_quorum(
         proto_005_2_constants::PROTOCOL_HASH => {
             proto_005_2::votes_services::get_current_quorum(context_proto_params, chain_id, context)
         }
-        proto_006_constants::PROTOCOL_HASH => panic!("not yet implemented!"),
+        proto_006_constants::PROTOCOL_HASH =>{
+            proto_006::votes_services::get_current_quorum(context_proto_params, chain_id, context)
+        }
         _ => panic!("Missing endorsing rights implemetation for protocol: {}, protocol is not yet supported!", hash)
     }
 }
@@ -315,9 +324,12 @@ pub(crate) fn get_votes_proposals(_chain_id: &str, block_id: &str, persistent_st
     for (key, value) in listings_data.into_iter() {
         if let Bucket::Exists(data) = value {
             // get the address an the curve tag from the key (e.g. data/votes/listings/ed25519/2c/ca/28/ab/01/9ae2d8c26f4ce4924cad67a2dc6618)
-            let address = key.split("/").skip(4).take(6).join("");
-            let curve = key.split("/").skip(3).take(1).join("");
-            println!("Add: {} Curve: {}", address, curve);
+            let (curve, address) = if let Some(t) = extract_curve_and_bytes(&key)? {
+                t
+            } else {
+                bail!("Cannot extract curve and address from key");
+            };
+
             let address_decoded = SignaturePublicKeyHash::from_hex_hash_and_curve(&address, &curve)?.to_string();
             
             let roll_count = num_from_slice!(data, 0, i32);
@@ -332,8 +344,14 @@ pub(crate) fn get_votes_proposals(_chain_id: &str, block_id: &str, persistent_st
     for (key, value) in proposals_data.into_iter() {
         if let Bucket::Exists(_) = value  {
             let protocol_hash = HashType::ProtocolHash.bytes_to_string(&hex::decode(key.split("/").skip(3).take(6).join(""))?);
-            let address = key.split("/").skip(10).take(6).join("");
-            let curve = key.split("/").skip(9).take(1).join("");
+            // let address = key.split("/").skip(10).take(6).join("");
+            // let curve = key.split("/").skip(9).take(1).join("");
+            let (curve, address) = if let Some(t) = extract_curve_and_bytes(&key)? {
+                t
+            } else {
+                bail!("Cannot extract curve and address from key");
+            };
+
             let address_decoded = SignaturePublicKeyHash::from_hex_hash_and_curve(&address, &curve)?.to_string();
 
             if let Some(data) = listings_map.get(&address_decoded) {
@@ -367,19 +385,22 @@ pub(crate) fn get_votes_ballot_list(_chain_id: &str, block_id: &str, persistent_
     let ballot_data = if let Some(data) = context.get_by_key_prefix(&context_index, &ballot_key_prefix)? {
         data
     } else {
-        bail!("No proposals found");
+        bail!("No ballots found");
     };
 
-    let mut ballot_list: Vec<RpcJsonMap> = Default::default();
+    // let mut ballot_list: Vec<RpcJsonMap> = Default::default();
     let mut temp_list: Vec<BallotListElement> = Default::default();
 
     for (key, value) in ballot_data.into_iter() {
         if let Bucket::Exists(data) = value {
             if data.len() == 1 {
                 // get the address an the curve tag from the key (e.g. data/votes/listings/ed25519/2c/ca/28/ab/01/9ae2d8c26f4ce4924cad67a2dc6618)
-                let address = key.split("/").skip(4).take(6).join("");
-                let curve = key.split("/").skip(3).take(1).join("");
-                println!("Add: {} Curve: {}", address, curve);
+                let (curve, address) = if let Some(t) = extract_curve_and_bytes(&key)? {
+                    t
+                } else {
+                    bail!("Cannot extract curve and address from key");
+                };
+                // println!("Add: {} Curve: {}", address, curve);
                 let address_decoded = SignaturePublicKeyHash::from_hex_hash_and_curve(&address, &curve)?;
                 let ballot = match data[0] {
                     0 => Ballot::Yay,
@@ -389,13 +410,15 @@ pub(crate) fn get_votes_ballot_list(_chain_id: &str, block_id: &str, persistent_
                 };
                 temp_list.push(BallotListElement::new(address_decoded, ballot));
             } else {
+                println!("Length error -> Data: {:?}", data);
                 bail!("No ballot cast");
             }
-        } else {
-            bail!("No ballot cast");
         }
     }
     temp_list.sort();
-    ballot_list.reverse();
+    temp_list.reverse();
+    let ballot_list = temp_list.iter()
+        .map(|v| v.as_map())
+        .collect();
     Ok(Some(ballot_list))
 }

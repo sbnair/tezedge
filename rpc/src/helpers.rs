@@ -7,6 +7,7 @@ use std::convert::TryInto;
 use failure::bail;
 use serde::Serialize;
 use serde_json::Value;
+use itertools::Itertools;
 
 use crypto::hash::{BlockHash, HashType, ProtocolHash};
 use shell::shell_channel::BlockApplied;
@@ -18,6 +19,17 @@ use tezos_messages::ts_to_rfc3339;
 
 use crate::ContextList;
 use crate::rpc_actor::RpcCollectedStateRef;
+
+#[macro_export]
+macro_rules! merge_slices {
+    ( $($x:expr),* ) => {{
+        let mut res = vec![];
+        $(
+            res.extend_from_slice($x);
+        )*
+        res
+    }}
+}
 
 /// Object containing information to recreate the full block information
 #[derive(Serialize, Debug, Clone)]
@@ -378,3 +390,25 @@ pub(crate) fn get_context(level: &str, list: ContextList) -> Result<Option<HashM
 
 //     Ok(key_vector)
 // }
+
+// TODO: rename this, couldn't think of a better type alias for a touple ("ed25519", "43a84d013b61b4c2cafe3fb89463329d7295a377")
+//                                                                          curve               bytes
+// to be used in SignaturePublicKeyHash::from_hex_hash_and_curve
+pub type ComponentCurveAndHash = (String, String);
+
+pub fn extract_curve_and_bytes(key: &str) -> Result<Option<ComponentCurveAndHash>, failure::Error> {
+    let mut key_iter = key.split("/");
+
+    // find the curve in the iterator and get his positon
+    let curve = if let Some(c) = key_iter.find(|x| x == &"ed25519" || x == &"secp256k1" || x == &"p256") {
+        c
+    } else {
+        return Ok(None);
+    };
+
+    // the sliced serilized component(pkh, protocol_hash, etc)
+    // it directly follows the curve -> take the next 6 elements of the iterator
+    let bytes = key_iter.take(6).join("");
+
+    Ok(Some((curve.to_string(), bytes)))
+}

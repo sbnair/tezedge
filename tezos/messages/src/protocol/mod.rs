@@ -177,7 +177,7 @@ pub fn get_constants_for_rpc(bytes: &[u8], protocol: ProtocolHash) -> Result<Opt
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Ord, Eq, PartialEq, PartialOrd)]
 pub enum Ballot {
     Yay,
     Nay,
