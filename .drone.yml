@@ -233,8 +233,6 @@ steps:
     image: alpine/git
     user: root
     volumes:
-      - name: tezedge-node-data
-        path: /tmp/tezedge_developer
       - name: tezedge-another-node-data
         path: /tmp/tezedge_another_developer
     commands:
@@ -276,7 +274,7 @@ steps:
       - cargo build --release --workspace
       - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network "$${NETWORK}" --identity-file "/drone/src/docker/identities/identity_tezedge.json" --p2p-port=39732 --rpc-port=38732 --peer "tezedge-node-run:19732"
 
-  - name: bootstrapping-tezedge
+  - name: bootstrapping-tezedge-another
     image: simplestakingcom/tezos-node-bootstrap:latest
     commands:
       - tezos-node-bootstrap --bootstrap --level=$${TO_BLOCK_HEADER} --node_tezedge=$${TEZEDGE_NODE_ANOTHER_RPC_CONTEXT_ROOT}
