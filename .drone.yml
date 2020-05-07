@@ -238,10 +238,10 @@ steps:
       - name: tezedge-another-node-data
         path: /tmp/tezedge_another_developer
     commands:
-      - rm -rf /tmp/tezedge_another_developer/light-node
-      - rm -rf /tmp/tezedge_another_developer/tezos-node
       - rm -rf /tmp/tezedge_developer/light-node
       - rm -rf /tmp/tezedge_developer/tezos-node
+      - rm -rf /tmp/tezedge_another_developer/light-node
+      - rm -rf /tmp/tezedge_another_developer/tezos-node
 
 # just run node bootstrapped before
   - name: tezedge-node-run
@@ -276,7 +276,7 @@ steps:
       SODIUM_USE_PKG_CONFIG: 1
     commands:
       - cargo build --release --workspace
-      - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network "$${NETWORK}" --identity-file "/drone/src/docker/identities/identity_tezedge.json" --p2p-port=39732 --rpc-port=38732 --peer "tezedge-node-run:19732"
+      - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network "$${NETWORK}" --identity-file "/drone/src/docker/identities/identity_tezedge.json" --p2p-port=39732 --rpc-port=38732 --peers "tezedge-node-run:19732"
 
   - name: bootstrapping-tezedge-another
     image: simplestakingcom/tezos-node-bootstrap:latest
