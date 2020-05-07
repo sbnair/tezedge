@@ -233,11 +233,15 @@ steps:
     image: alpine/git
     user: root
     volumes:
+      - name: tezedge-node-data
+        path: /tmp/tezedge_developer
       - name: tezedge-another-node-data
         path: /tmp/tezedge_another_developer
     commands:
       - rm -rf /tmp/tezedge_another_developer/light-node
       - rm -rf /tmp/tezedge_another_developer/tezos-node
+      - rm -rf /tmp/tezedge_developer/light-node
+      - rm -rf /tmp/tezedge_developer/tezos-node
 
 # just run node bootstrapped before
   - name: tezedge-node-run
