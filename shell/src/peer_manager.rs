@@ -191,13 +191,13 @@ impl PeerManager {
             self.discovery_last = Some(Instant::now());
 
             info!(log, "Doing peer DNS lookup"; "bootstrap_addresses" => format!("{:?}", &self.bootstrap_addresses));
-            dns_lookup_peers(&self.bootstrap_addresses, &log).iter()
-                .for_each(|address| {
-                    if !self.is_blacklisted(&address.ip()) {
-                        info!(log, "Found potential peer"; "address" => address);
-                        self.potential_peers.insert(*address);
-                    }
-                });
+            // dns_lookup_peers(&self.bootstrap_addresses, &log).iter()
+            //     .for_each(|address| {
+            //         if !self.is_blacklisted(&address.ip()) {
+            //             info!(log, "Found potential peer"; "address" => address);
+            //             self.potential_peers.insert(*address);
+            //         }
+            //     });
 
             if self.potential_peers.is_empty() {
                 info!(log, "Using initial peers as a potential peers"; "initial_peers" => format!("{:?}", &self.initial_peers));
@@ -205,8 +205,8 @@ impl PeerManager {
                 self.potential_peers.extend(&self.initial_peers);
             }
         } else {
-            self.peers.values()
-                .for_each(|peer_state| peer_state.peer_ref.tell(SendMessage::new(PeerMessage::Bootstrap.into()), None));
+            // self.peers.values()
+            //     .for_each(|peer_state| peer_state.peer_ref.tell(SendMessage::new(PeerMessage::Bootstrap.into()), None));
         }
     }
 
