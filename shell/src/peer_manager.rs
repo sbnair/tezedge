@@ -241,7 +241,8 @@ impl PeerManager {
 
     /// Check if given ip address is blacklisted to connect to
     fn is_blacklisted(&self, ip_address: &IpAddr) -> bool {
-        self.ip_blacklist.contains(ip_address)
+        // self.ip_blacklist.contains(ip_address)
+        false
     }
 
     fn process_shell_channel_message(&mut self, ctx: &Context<PeerManagerMsg>, msg: ShellChannelMsg) -> Result<(), failure::Error> {
