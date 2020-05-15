@@ -268,6 +268,10 @@ steps:
     environment:
       SODIUM_USE_PKG_CONFIG: 1
     commands:
+      - cd /tmp/tezedge_developer2
+      - rm -rf tezedge
+      - git clone https://github.com/simplestaking/tezedge.git && cd tezedge
+      - cd /tmp/tezedge_developer2/tezedge
       - cargo build --release --workspace
       - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network "$${NETWORK}" --identity-file "/drone/src/docker/identities/identity_tezedge_master.json" --p2p-port=39732 --rpc-port=38732 --bootstrap-lookup-address 127.0.0.50 --peers 167.99.92.96:9732
 
