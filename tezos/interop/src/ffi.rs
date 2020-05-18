@@ -164,13 +164,19 @@ pub fn genesis_result_data(context_hash: RustBytes, chain_id: RustBytes, protoco
 
 /// Applies block to context
 /// - apply_block_request see [tezos_api::ffi:ApplyBlockRequest]
-pub fn apply_block(apply_block_request: RustBytes)
+pub fn apply_block(apply_block_request: ApplyBlockRequest)
     -> Result<Result<ApplyBlockResult, ApplyBlockError>, OcamlError> {
     runtime::execute(move || {
         let ocaml_function = ocaml::named_value("apply_block").expect("function 'apply_block' is not registered");
 
+        // write to bytes
+        let request = match apply_block_request.as_rust_bytes(&APPLY_BLOCK_REQUEST_ENCODING) {
+            Ok(data) => data,
+            Err(e) => return Err(ApplyBlockError::InvalidApplyBlockRequestData { message: format!("{:?}", e) })
+        };
+
         // call ffi
-        match ocaml_function.call_exn::<OcamlBytes>(apply_block_request.convert_to()) {
+        match ocaml_function.call_exn::<OcamlBytes>(request.convert_to()) {
             Ok(validation_result) => {
                 let validation_result: Tuple = validation_result.into();
 

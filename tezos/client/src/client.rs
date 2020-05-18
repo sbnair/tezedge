@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: MIT
 
 use crypto::hash::{ChainId, ContextHash, ProtocolHash};
-use tezos_api::ffi::{APPLY_BLOCK_REQUEST_ENCODING, ApplyBlockError, ApplyBlockRequest, ApplyBlockRequestBuilder, ApplyBlockResult, CommitGenesisResult, ContextDataError, GenesisChain, GetDataError, InitProtocolContextResult, ProtocolOverrides, TezosGenerateIdentityError, TezosRuntimeConfiguration, TezosRuntimeConfigurationError, TezosStorageInitError};
+use tezos_api::ffi::{
+    ApplyBlockError, ApplyBlockRequest, ApplyBlockRequestBuilder, ApplyBlockResult,
+    CommitGenesisResult,
+    ContextDataError, GenesisChain, GetDataError, InitProtocolContextResult, ProtocolOverrides, TezosGenerateIdentityError,
+    TezosRuntimeConfiguration, TezosRuntimeConfigurationError, TezosStorageInitError,
+};
 use tezos_api::identity::Identity;
-use tezos_encoding::binary_writer;
 use tezos_interop::ffi;
 use tezos_messages::p2p::encoding::prelude::*;
 
@@ -80,14 +84,8 @@ pub fn apply_block(
         .block_header(block_header.clone())
         .pred_header(predecessor_block_header.clone())
         .max_operations_ttl(max_operations_ttl as i32)
-        .operations(ApplyBlockRequest::to_ops(operations))
+        .operations(ApplyBlockRequest::convert_operations(operations))
         .build().unwrap();
-
-    // write to bytes
-    let request = match binary_writer::write(&request, &APPLY_BLOCK_REQUEST_ENCODING) {
-        Ok(data) => data,
-        Err(e) => return Err(ApplyBlockError::InvalidApplyBlockRequestData { message: format!("{:?}", e) })
-    };
 
     match ffi::apply_block(request) {
         Ok(result) => result,

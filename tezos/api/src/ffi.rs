@@ -6,11 +6,14 @@
 use derive_builder::Builder;
 use failure::Fail;
 use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 
 use crypto::hash::{ChainId, ContextHash, HashType};
 use lazy_static::lazy_static;
+use tezos_encoding::{binary_writer, ser};
+use tezos_encoding::binary_reader::{BinaryReader, BinaryReaderError};
+use tezos_encoding::de::from_value as deserialize_from_value;
 use tezos_encoding::encoding::{Encoding, Field, HasEncoding};
-use tezos_messages::p2p::binary_message::cache::{BinaryDataCache, CachedData, CacheReader, CacheWriter};
 use tezos_messages::p2p::encoding::prelude::{BlockHeader, Operation, OperationsForBlocksMessage};
 
 lazy_static! {
@@ -24,6 +27,22 @@ lazy_static! {
 }
 
 pub type RustBytes = Vec<u8>;
+
+/// Trait for binary encoding messages for ffi.
+pub trait FfiMessage: DeserializeOwned + Serialize + Sized {
+    #[inline]
+    fn as_rust_bytes(&self, encoding: &Encoding) -> Result<RustBytes, ser::Error> {
+        binary_writer::write(&self, &encoding)
+    }
+
+    /// Create new struct from bytes.
+    /// #[inline]
+    fn from_rust_bytes(buf: RustBytes, encoding: &Encoding) -> Result<Self, BinaryReaderError> {
+        let value = BinaryReader::new().read(buf, encoding)?;
+        let value: Self = deserialize_from_value(&value)?;
+        Ok(value)
+    }
+}
 
 /// Genesis block information structure
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -62,13 +81,10 @@ pub struct ApplyBlockRequest {
     pub pred_header: BlockHeader,
     pub max_operations_ttl: i32,
     pub operations: Vec<Vec<Operation>>,
-    #[serde(skip_serializing)]
-    #[builder(default)]
-    body: BinaryDataCache,
 }
 
 impl ApplyBlockRequest {
-    pub fn to_ops(block_operations: &Vec<Option<OperationsForBlocksMessage>>) -> Vec<Vec<Operation>> {
+    pub fn convert_operations(block_operations: &Vec<Option<OperationsForBlocksMessage>>) -> Vec<Vec<Operation>> {
         let mut operations = Vec::with_capacity(block_operations.len());
 
         for block_ops in block_operations {
@@ -83,17 +99,7 @@ impl ApplyBlockRequest {
     }
 }
 
-impl CachedData for ApplyBlockRequest {
-    #[inline]
-    fn cache_reader(&self) -> &dyn CacheReader {
-        &self.body
-    }
-
-    #[inline]
-    fn cache_writer(&mut self) -> Option<&mut dyn CacheWriter> {
-        Some(&mut self.body)
-    }
-}
+impl FfiMessage for ApplyBlockRequest {}
 
 /// Application block result
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]

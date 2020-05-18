@@ -300,7 +300,7 @@ fn test_apply_block_request_roundtrip(iteration: i32) -> Result<(), failure::Err
         .block_header(BlockHeader::from_bytes(hex::decode(HEADER).unwrap()).unwrap())
         .pred_header(BlockHeader::from_bytes(hex::decode(HEADER).unwrap()).unwrap())
         .max_operations_ttl(MAX_OPERATIONS_TTL)
-        .operations(ApplyBlockRequest::to_ops(&block_operations_from_hex(HEADER_HASH, sample_operations_for_request())))
+        .operations(ApplyBlockRequest::convert_operations(&block_operations_from_hex(HEADER_HASH, sample_operations_for_request())))
         .build().unwrap();
 
     // decode to bytes
