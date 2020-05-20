@@ -63,7 +63,7 @@ steps:
     - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network mainnet --identity-file "/drone/src/docker/identities/identity_tezedge_master.json"
 
 - name: bootstrapping-tezedge-not-fixed
-  image: simplestakingcom/tezos-node-bootstrap:dev
+  image: simplestakingcom/tezos-node-bootstrap:latest
   commands:
     - tezos-node-bootstrap --bootstrap --level=0 --node_tezedge=$${TEZEDGE_NODE_MASTER_RPC_CONTEXT_ROOT}
 
@@ -98,7 +98,7 @@ steps:
     - tezos-admin-client -A `cat /tmp/tezedge-cache/ocaml_ip.txt` -P 8732 connect address `cat /tmp/tezedge-cache/tezedge_ip.txt`:9732
 
 - name: bootstrapping-ocaml
-  image: simplestakingcom/tezos-node-bootstrap:dev
+  image: simplestakingcom/tezos-node-bootstrap:latest
   commands:
     - tezos-node-bootstrap --bootstrap --level=1000 --node_ocaml=$${OCAML_NODE_RPC_CONTEXT_ROOT}
 
