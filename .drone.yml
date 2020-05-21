@@ -93,7 +93,7 @@ steps:
     - name: cache
       path: /tmp/tezedge-cache
   commands:
-    - sleep 5
+    - sleep 20
     - cat /tmp/tezedge-cache/tezedge_ip.txt
     - tezos-admin-client -A `cat /tmp/tezedge-cache/ocaml_ip.txt` -P 8732 connect address `cat /tmp/tezedge-cache/tezedge_ip.txt`:9732
 
