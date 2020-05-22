@@ -77,7 +77,7 @@ steps:
     - cp /drone/src/docker/identities/identity_ocaml.json /home/tezos/data/identity.json
     - rm -f /home/tezos/data/config.json
     - tezos-node config init --data-dir /home/tezos/data --network carthagenet
-    - tezos-node run --data-dir /home/tezos/data --history-mode archive --rpc-addr 0.0.0.0:8732 --net-addr 0.0.0.0:9734 --network carthagenet --no-bootstrap-peers
+    - tezos-node run --data-dir /home/tezos/data --history-mode archive --rpc-addr 0.0.0.0:8732 --net-addr 0.0.0.0:9734 --network carthagenet
 
 - name: ocaml-node-carthage-connect-to-tezedge
   user: root
