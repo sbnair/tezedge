@@ -24,7 +24,7 @@ environment:
   SODIUM_USE_PKG_CONFIG: 1
   LD_LIBRARY_PATH: ./tezos/interop/lib_tezos/artifacts:./target/release
   OCAML_NODE_RPC_CONTEXT_ROOT: http://ocaml-node-carthage-run:8732
-  TEZEDGE_NODE_MASTER_RPC_CONTEXT_ROOT: http://tezedge-not-fixed-node-mainnet-run:18732
+  TEZEDGE_NODE_MASTER_RPC_CONTEXT_ROOT: http://tezedge-node-mainnet-run:18732
 
 steps:
 - name: cleanup-node-data
@@ -41,7 +41,7 @@ steps:
     - rm -rf /tmp/tezedge_master_developer/light-node
     - rm -rf /tmp/tezedge_master_developer/tezos-node
 
-- name: tezedge-not-fixed-node-mainnet-run
+- name: tezedge-node-mainnet-run
   image: simplestakingcom/tezedge-ci-builder:latest
   pull: if-not-exists
   user: root
@@ -55,10 +55,6 @@ steps:
     SODIUM_USE_PKG_CONFIG: 1
   commands:
     - ip -o -4 addr show | awk -F '[ /]+' '/global/ {print $4}' > /tmp/tezedge-cache/tezedge_ip.txt
-    - cd /tmp/tezedge-cache
-    - rm -rf tezedge
-    - git clone https://github.com/simplestaking/tezedge.git && cd tezedge && git checkout 2799c7663c912fff3cfe1edb7e87ce580a4cda5c
-    - cd /tmp/tezedge-cache/tezedge
     - cargo build --release --workspace
     - cargo run --release --bin light-node -- --config-file "./light_node/etc/tezedge/tezedge_drone.config" --network mainnet --identity-file "/drone/src/docker/identities/identity_tezedge_master.json"
 
@@ -70,7 +66,7 @@ steps:
   # just run ocaml snapshosted node
 - name: ocaml-node-carthage-run
   user: root
-  image: tezos/tezos:v7.0-rc1
+  image: tezos/tezos:v7.1
   detach: true
   volumes:
     - name: ocaml-node-carthage-snapshot-data
@@ -94,7 +90,6 @@ steps:
       path: /tmp/tezedge-cache
   commands:
     - sleep 20
-    - cat /tmp/tezedge-cache/tezedge_ip.txt
     - tezos-admin-client -A `cat /tmp/tezedge-cache/ocaml_ip.txt` -P 8732 connect address `cat /tmp/tezedge-cache/tezedge_ip.txt`:9732
 
 - name: bootstrapping-ocaml
