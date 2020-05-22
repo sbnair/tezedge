@@ -73,6 +73,7 @@ steps:
       path: /tmp/tezedge-cache
   commands:
     - ip -o -4 addr show | awk -F '[ /]+' '/global/ {print $4}' > /tmp/tezedge-cache/ocaml_ip.txt
+    - mkdir /home/tezos/data/
     - cp /drone/src/docker/identities/identity_ocaml.json /home/tezos/data/identity.json
     - rm -f /home/tezos/data/config.json
     - tezos-node config init --data-dir /home/tezos/data --network carthagenet
