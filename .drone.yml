@@ -69,13 +69,10 @@ steps:
   image: tezos/tezos:v7.1
   detach: true
   volumes:
-    - name: ocaml-node-carthage-snapshot-data
-      path: /home/tezos/data
     - name: cache
       path: /tmp/tezedge-cache
   commands:
     - ip -o -4 addr show | awk -F '[ /]+' '/global/ {print $4}' > /tmp/tezedge-cache/ocaml_ip.txt
-    - rm -f /home/tezos/data/lock
     - cp /drone/src/docker/identities/identity_ocaml.json /home/tezos/data/identity.json
     - rm -f /home/tezos/data/config.json
     - tezos-node config init --data-dir /home/tezos/data --network carthagenet
@@ -98,9 +95,6 @@ steps:
     - tezos-node-bootstrap --bootstrap --level=1000 --node_ocaml=$${OCAML_NODE_RPC_CONTEXT_ROOT}
 
 volumes:
-  - name: ocaml-node-carthage-snapshot-data
-    host:
-      path: /etc/ocaml-node-carthage-snapshot-data
   - name: tezedge-node-data
     host:
       path: /etc/tezedge-node
